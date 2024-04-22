@@ -3,10 +3,11 @@
 #include "DHT.h"
 #include <TridentTD_LineNotify.h>
 #include "pitches.h"
+#include <string.h>
 
 //define for Line
-#define SSID        "BinkEmb"  // ชื่อไวไฟ
-#define PASSWORD    "3354776415"  // รหัสไวไฟ
+#define SSID        //"BinkEmb"//"KIT2002"  // ชื่อไวไฟ
+#define PASSWORD    //"3354776415"//"TP4KBTS7"  // รหัสไวไฟ
 #define LINE_TOKEN  "33VLT5MnHmkqi8QfbnRHicNptxx2On0ETICOrAmkomN"  // token line
 
 //initial DHT22 sensor
@@ -121,30 +122,26 @@ void setup() {
 
   //interrupt
   //attachInterrupt(digitalPinToInterrupt(DHTPIN),checkTemp,CHANGE);
-  
+  noti = false;
+  noti2 = false;
 
 }
 
 void loop() {
 
-  lcd_display();
-  checkTemp();
-  checkHum();
-  
-
-}
-
-void lcd_display()
-{
   float farenheit = dht.readTemperature(true);
   Serial.print("\tHumidity : ");
   Serial.print(humidity,1);
   Serial.print("\t\tTemp C : ");
   Serial.print(temperature,1);
-  Serial.println(farenheit, 1);    
+  Serial.println(farenheit, 1);
+  Serial.print("\t\tnoti = ");
+  Serial.print(noti);
+  Serial.print("\t\tnoti2 = ");
+  Serial.println(noti2);
 
   lcd.setCursor(0, 0);
-  lcd.print("hum:     ");
+  lcd.print("Hum:     ");
   lcd.setCursor(4, 0);
   lcd.print(humidity);
   lcd.setCursor(9, 0);
@@ -156,6 +153,15 @@ void lcd_display()
   lcd.setCursor(9, 1);
   lcd.print("C");
 
+  checkTemp();
+  checkHum();
+
+  Serial.print("------------ after check -------------\n");
+  Serial.print("\t\tnoti = ");
+  Serial.print(noti);
+  Serial.print("\t\tnoti2 = ");
+  Serial.println(noti2);
+ 
   delay(2000);
 }
 
@@ -172,6 +178,10 @@ void checkTemp()
     lcd.print("too HOT!!");
 
     //line notify
+    /*if(!noti)
+    {
+      LINE.notify("อากาศร้อน หนังสือกำลังจะละลาย");
+    }*/
     send_stick(noti,"อากาศร้อน หนังสือกำลังจะละลาย",1);
     noti = true;
 
@@ -179,7 +189,8 @@ void checkTemp()
     fan_console(true);
 
     //sound activate
-    make_noise(true);
+    //make_noise(true);
+    delay(1500);
   }
   else if(temperature < 20)
   {
@@ -190,6 +201,10 @@ void checkTemp()
     lcd.print("too COLD!!");
 
     //line notify
+    /*if(!noti)
+    {
+      LINE.notify("หนาวเกิน หนังสือจะแข็งแหลว");
+    }*/
     send_stick(noti,"หนาวเกิน หนังสือจะแข็งแหลว",2);
     noti = true;
 
@@ -197,7 +212,8 @@ void checkTemp()
     fan_console(false);
 
     //sound activate
-    make_noise(true);
+    //make_noise(true);
+    delay(1500);
   }
   else
   {
@@ -221,6 +237,11 @@ void checkHum()
     lcd.print("too WET!!");
 
     //line notify
+    /*if(!noti2)
+    {
+      LINE.notify("ชุ่มฉ่ำเกิน จะจมน้ำแล้ว");
+    }*/
+    
     send_stick(noti2,"ชุ่มฉ่ำเกิน จะจมน้ำแล้ว",4);
     noti2 = true;
   }
@@ -233,6 +254,11 @@ void checkHum()
     lcd.print("too DRY!!");
 
     //line notify
+    /*if(!noti2)
+    {
+      LINE.notify("แห้งเกิน จะกรอบแล้ว");
+    }*/
+
     send_stick(noti2,"แห้งเกิน จะกรอบแล้ว",3);
     noti2 = true;
   }
@@ -246,15 +272,18 @@ void send_stick(bool notify,String mes,int hoc)
 {
   if(!notify)
   {
+    LINE.notify(mes);
+    notify = true;
     if(hoc == 1)
     {
       //hot
-      LINE.notifySticker(mes,11539,52114142);
+      LINE.notifySticker(mes,11539,52114142);      
     }
     else if(hoc == 2)
     {
       //cold
       LINE.notifySticker(mes,789,10894);
+      //notify = true;
     }
     else if(hoc == 3)
     {
